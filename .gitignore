@@ -1,0 +1,27 @@
+# Database local (không push lên GitHub)
+data/
+
+# Biến môi trường (chứa password, key)
+.env
+.env.local
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Streamlit cache
+.streamlit/secrets.toml
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.user
