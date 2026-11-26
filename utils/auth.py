@@ -1,9 +1,67 @@
 """
 utils/auth.py – Xác thực & phân quyền cho toàn bộ app
 """
+from datetime import datetime
 import streamlit as st
 from utils.database import verify_login, get_db_info
 from utils.backup import auto_backup_if_needed
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# SHARED UI CSS
+# ══════════════════════════════════════════════════════════════════════════════
+
+_APP_CSS = """
+<style>
+[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #1A1A2E 0%, #16213E 100%);
+}
+[data-testid="stSidebar"] h1,
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] h3,
+[data-testid="stSidebar"] p,
+[data-testid="stSidebar"] span,
+[data-testid="stSidebar"] label,
+[data-testid="stSidebar"] [data-testid="stCaptionContainer"] {
+    color: #E6ECFF !important;
+}
+[data-testid="stSidebar"] [data-testid="stPageLink-NavLink"] {
+    border-radius: 8px;
+    padding: 4px 8px;
+}
+[data-testid="stSidebar"] [data-testid="stPageLink-NavLink"]:hover {
+    background: rgba(79, 142, 247, 0.22);
+}
+[data-testid="stSidebar"] .stButton > button {
+    background-color: #2D3561 !important;
+    color: #FFFFFF !important;
+    border: 1px solid #4F8EF7 !important;
+    border-radius: 8px;
+    font-weight: 600;
+}
+[data-testid="stSidebar"] .stButton > button:hover {
+    background-color: #4F8EF7 !important;
+    color: #FFFFFF !important;
+}
+
+div[data-testid="metric-container"] {
+    background: white;
+    border: 1px solid #E8ECF4;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(79,142,247,0.08);
+}
+div[data-testid="metric-container"] label { color: #666 !important; font-size: 13px; }
+div[data-testid="metric-container"] [data-testid="stMetricValue"] {
+    font-size: 28px !important; font-weight: 700; color: #1A1A2E !important;
+}
+h1 { color: #1A1A2E; font-weight: 800; }
+h2 { color: #2D3561; font-weight: 700; }
+h3 { color: #4F8EF7; }
+.stButton > button { border-radius: 8px; font-weight: 600; transition: all 0.2s; }
+.stButton > button:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(79,142,247,0.25); }
+</style>
+"""
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -47,38 +105,67 @@ def logout():
 def _show_login_page():
     st.markdown("""
     <style>
-    [data-testid="stAppViewContainer"] > .main {
-        background: linear-gradient(135deg, #1A1A2E 0%, #16213E 50%, #0F3460 100%);
+    [data-testid="stSidebar"],
+    [data-testid="collapsedControl"] {
+        display: none !important;
     }
-    .login-box {
-        background: white;
-        border-radius: 20px;
-        padding: 48px 40px;
-        max-width: 420px;
-        margin: 60px auto 0 auto;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    [data-testid="stAppViewContainer"] {
+        background: linear-gradient(135deg, #1A1A2E 0%, #16213E 55%, #0F3460 100%);
+    }
+    [data-testid="stHeader"] {
+        background: transparent;
+    }
+    .login-header {
+        text-align: center;
+        padding: 24px 0 12px 0;
     }
     .login-title {
-        text-align: center;
-        color: #1A1A2E;
-        font-size: 28px;
+        color: #FFFFFF;
+        font-size: 32px;
         font-weight: 800;
-        margin-bottom: 4px;
+        margin-bottom: 6px;
     }
     .login-sub {
+        color: #B8C7E0;
+        font-size: 15px;
+    }
+    [data-testid="stForm"] {
+        background: #FFFFFF;
+        border-radius: 18px;
+        padding: 32px 28px 24px 28px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+        border: none;
+    }
+    [data-testid="stForm"] label,
+    [data-testid="stForm"] p {
+        color: #1A1A2E !important;
+    }
+    .login-hint {
         text-align: center;
-        color: #888;
-        font-size: 14px;
-        margin-bottom: 32px;
+        color: #C9D6EA;
+        font-size: 13px;
+        margin-top: 10px;
+    }
+    .login-hint code {
+        background: rgba(255,255,255,0.14);
+        color: #FFFFFF;
+        padding: 2px 6px;
+        border-radius: 4px;
     }
     </style>
     """, unsafe_allow_html=True)
 
-    _, col, _ = st.columns([1, 2, 1])
+    _, col, _ = st.columns([1, 1.4, 1])
     with col:
-        st.markdown('<div class="login-box">', unsafe_allow_html=True)
-        st.markdown('<div class="login-title">📚 Trung Tâm Dạy Thêm</div>', unsafe_allow_html=True)
-        st.markdown('<div class="login-sub">Hệ thống quản lý học sinh</div>', unsafe_allow_html=True)
+        st.markdown(
+            """
+            <div class="login-header">
+                <div class="login-title">📚 Trung Tâm Dạy Thêm</div>
+                <div class="login-sub">Hệ thống quản lý học sinh &amp; học phí</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
         with st.form("login_form"):
             username = st.text_input("👤 Tên đăng nhập", placeholder="admin")
@@ -97,9 +184,10 @@ def _show_login_page():
                 else:
                     st.error("❌ Sai tên đăng nhập hoặc mật khẩu!")
 
-        st.markdown("---")
-        st.caption("💡 Lần đầu dùng: `admin` / `admin123`")
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown(
+            '<div class="login-hint">💡 Tài khoản mặc định: <code>admin</code> / <code>admin123</code></div>',
+            unsafe_allow_html=True,
+        )
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -107,7 +195,9 @@ def _show_login_page():
 # ══════════════════════════════════════════════════════════════════════════════
 
 def render_sidebar():
-    """Render sidebar với thông tin user và điều hướng"""
+    """Render CSS chung, sidebar với thông tin user và điều hướng."""
+    st.markdown(_APP_CSS, unsafe_allow_html=True)
+
     user = st.session_state.get("user", {})
     role = user.get("role", "teacher")
     name = user.get("full_name", "")
@@ -119,12 +209,15 @@ def render_sidebar():
 
         role_icon = "🔑" if role == "admin" else "👩‍🏫"
         role_label = "Admin" if role == "admin" else "Giáo viên"
-        st.markdown(f"""
-        <div style="background:#2D3561;border-radius:10px;padding:12px 14px;margin-bottom:12px">
-        <div style="color:#A0C4FF;font-size:12px">{role_icon} {role_label} • {db_info['badge']}</div>
-        <div style="color:white;font-weight:700;font-size:15px">{name}</div>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown(
+            f"""
+            <div style="background:#2D3561;border-radius:10px;padding:12px 14px;margin-bottom:12px">
+                <div style="color:#A0C4FF;font-size:12px">{role_icon} {role_label} • {db_info['badge']}</div>
+                <div style="color:white;font-weight:700;font-size:15px">{name}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
         st.markdown("### 📋 Menu")
         st.page_link("app.py",                         label="🏠 Tổng quan")
@@ -143,7 +236,7 @@ def render_sidebar():
             st.page_link("pages/9_Sao_Luu_Data.py",  label="💾 Sao lưu & Cloud")
 
         st.markdown("---")
-        if st.button("🚪 Đăng xuất", use_container_width=True, type="secondary"):
+        if st.button("🚪 Đăng xuất", use_container_width=True):
             logout()
 
-        st.caption(f"🕐 {__import__('datetime').datetime.now().strftime('%d/%m/%Y %H:%M')}")
+        st.caption(f"🕐 {datetime.now().strftime('%d/%m/%Y %H:%M')}")

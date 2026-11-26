@@ -56,7 +56,12 @@ def get_database_url() -> str:
     if not url:
         try:
             import streamlit as st
-            if "DATABASE_URL" in st.secrets:
+            has_secrets = (
+                st.secrets.load_if_toml_exists()
+                if hasattr(st.secrets, "load_if_toml_exists")
+                else any(os.path.exists(p) for p in (st.config.get_option("secrets.files") or []))
+            )
+            if has_secrets and "DATABASE_URL" in st.secrets:
                 url = str(st.secrets["DATABASE_URL"]).strip()
         except Exception:
             pass

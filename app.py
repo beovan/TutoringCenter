@@ -21,33 +21,6 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# ── CSS ─────────────────────────────────────────────────────────────────────────
-st.markdown("""
-<style>
-[data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #1A1A2E 0%, #16213E 100%);
-}
-[data-testid="stSidebar"] * { color: #E0E0E0 !important; }
-
-div[data-testid="metric-container"] {
-    background: white;
-    border: 1px solid #E8ECF4;
-    border-radius: 12px;
-    padding: 16px;
-    box-shadow: 0 2px 8px rgba(79,142,247,0.08);
-}
-div[data-testid="metric-container"] label { color: #666 !important; font-size: 13px; }
-div[data-testid="metric-container"] [data-testid="stMetricValue"] {
-    font-size: 28px !important; font-weight: 700; color: #1A1A2E !important;
-}
-h1 { color: #1A1A2E; font-weight: 800; }
-h2 { color: #2D3561; font-weight: 700; }
-h3 { color: #4F8EF7; }
-.stButton > button { border-radius: 8px; font-weight: 600; transition: all 0.2s; }
-.stButton > button:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(79,142,247,0.3); }
-</style>
-""", unsafe_allow_html=True)
-
 # ── Auth + DB ────────────────────────────────────────────────────────────────────
 init_db()
 user = check_auth()
